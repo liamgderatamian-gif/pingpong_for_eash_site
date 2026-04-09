@@ -7,12 +7,26 @@ const paddleHeight = 100;
 let paddle1Y = canvas.height / 2 - paddleHeight / 2;
 let paddle2Y = canvas.height / 2 - paddleHeight / 2;
 
+const paddleSpeed = 8;
+
 // Ball Variables
 const ballSize = 10;
 let ballX = canvas.width / 2;
 let ballY = canvas.height / 2;
 let ballSpeedX = 5;
 let ballSpeedY = 5;
+
+// Keyboard State
+let keys = {};
+
+// Listen for key presses
+document.addEventListener('keydown', (e) => {
+  keys[e.key] = true;
+});
+
+document.addEventListener('keyup', (e) => {
+  keys[e.key] = false;
+});
 
 // Draw Functions
 function drawRect(x, y, width, height, color) {
@@ -28,31 +42,45 @@ function drawCircle(x, y, radius, color) {
 }
 
 function draw() {
-  // Clear Canvas
   drawRect(0, 0, canvas.width, canvas.height, 'black');
 
-  // Draw Paddles
   drawRect(0, paddle1Y, paddleWidth, paddleHeight, 'white');
   drawRect(canvas.width - paddleWidth, paddle2Y, paddleWidth, paddleHeight, 'white');
 
-  // Draw Ball
   drawCircle(ballX, ballY, ballSize, 'white');
 }
 
 // Update Function
 function update() {
+  // Move paddles based on keys
+  if (keys['w']) paddle1Y -= paddleSpeed;
+  if (keys['s']) paddle1Y += paddleSpeed;
+
+  if (keys['ArrowUp']) paddle2Y -= paddleSpeed;
+  if (keys['ArrowDown']) paddle2Y += paddleSpeed;
+
+  // Prevent paddles from leaving screen
+  paddle1Y = Math.max(0, Math.min(canvas.height - paddleHeight, paddle1Y));
+  paddle2Y = Math.max(0, Math.min(canvas.height - paddleHeight, paddle2Y));
+
   // Move Ball
   ballX += ballSpeedX;
   ballY += ballSpeedY;
 
-  // Ball Collision with Top and Bottom Walls
+  // Ball Collision with Top and Bottom
   if (ballY - ballSize < 0 || ballY + ballSize > canvas.height) {
     ballSpeedY = -ballSpeedY;
   }
 
   // Ball Collision with Paddles
-  if (ballX - ballSize < paddleWidth && ballY > paddle1Y && ballY < paddle1Y + paddleHeight ||
-      ballX + ballSize > canvas.width - paddleWidth && ballY > paddle2Y && ballY < paddle2Y + paddleHeight) {
+  if (
+    (ballX - ballSize < paddleWidth &&
+     ballY > paddle1Y &&
+     ballY < paddle1Y + paddleHeight) ||
+    (ballX + ballSize > canvas.width - paddleWidth &&
+     ballY > paddle2Y &&
+     ballY < paddle2Y + paddleHeight)
+  ) {
     ballSpeedX = -ballSpeedX;
   }
 
@@ -62,26 +90,10 @@ function update() {
   }
 }
 
-// Reset Ball Position
 function resetBall() {
   ballX = canvas.width / 2;
   ballY = canvas.height / 2;
   ballSpeedX = -ballSpeedX;
-}
-
-// Mouse Move Handler
-canvas.addEventListener('mousemove', function(event) {
-  const mousePos = calculateMousePos(event);
-  paddle1Y = mousePos.y - paddleHeight / 2;
-});
-
-// Calculate Mouse Position
-function calculateMousePos(event) {
-  const rect = canvas.getBoundingClientRect();
-  const root = document.documentElement;
-  const mouseX = event.clientX - rect.left - root.scrollLeft;
-  const mouseY = event.clientY - rect.top - root.scrollTop;
-  return { x: mouseX, y: mouseY };
 }
 
 // Game Loop
@@ -91,5 +103,4 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// Start Game
 gameLoop();
